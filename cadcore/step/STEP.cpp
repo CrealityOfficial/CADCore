@@ -1,7 +1,3 @@
-//#include "../libslic3r.h"
-//#include "../Model.hpp"
-//#include "../TriangleMesh.hpp"
-
 #include "fstream"
 #include "STEP.hpp"
 #include "tbb/tbb.h"

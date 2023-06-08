@@ -6,9 +6,9 @@ __cc_find(eigen)
 __cc_find(trimesh2)
 
 
-set(SRCS ${CMAKE_CURRENT_SOURCE_DIR}/interface.hPP
-		 ${CMAKE_CURRENT_SOURCE_DIR}/step/STEP.hpp
-		 ${CMAKE_CURRENT_SOURCE_DIR}/step/STEP.cpp
+set(SRCS cadcore/interface.hPP
+		 cadcore/step/STEP.hpp
+		 cadcore/step/STEP.cpp
 		 )
 		 
 set(LIBS admesh

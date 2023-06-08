@@ -2,7 +2,7 @@
 #define slic3r_Format_STEP_hpp_
 #include <functional>
 #include "trimesh2/TriMesh.h"
-#include "interface.hpp"
+#include "cadcore/interface.hpp"
 
 namespace Slic3r {
 
