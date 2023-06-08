@@ -1,0 +1,86 @@
+__cc_find(opencascade)
+__cc_find(tbb)
+__cc_find(freetype)
+__cc_find(admesh)
+__cc_find(eigen)
+__cc_find(trimesh2)
+
+
+set(SRCS ${CMAKE_CURRENT_SOURCE_DIR}/interface.hPP
+		 ${CMAKE_CURRENT_SOURCE_DIR}/step/STEP.hpp
+		 ${CMAKE_CURRENT_SOURCE_DIR}/step/STEP.cpp
+		 )
+		 
+set(LIBS admesh
+		 eigen
+		 freetype	
+		 tbb
+		 trimesh2
+		 #TKBin
+		 #TKBinL
+		 #TKBinTObj
+		 #TKBinXCAF
+		 #TKBO
+		 #TKBool
+		 TKBRep
+		 #TKCAF
+		 #TKCDF
+		 #TKD3DHost
+		 #TKD3DHostTest
+		 #TKDCAF
+		 #TKDraw
+		 TKernel
+		 #TKExpress
+		 #TKFeat
+		 #TKFillet
+		 #TKG2d
+		 #TKG3d
+		 #TKGeomAlgo
+		 #TKGeomBase
+		 #TKHLR
+		 #TKIGES
+		 #TKIVtk
+		 #TKIVtkDraw
+		 TKLCAF
+		 TKMath
+		 TKMesh
+		 #TKMeshVS
+		 #TKOffset
+		 #TKPrim
+		 #TKQADraw
+		 #TKRWMesh
+		 #TKService
+		 #TKShHealing
+		 #TKStd
+		 #TKStdL
+		 TKSTEP
+		 TKSTEP209
+		 TKSTEPAttr
+		 TKSTEPBase
+		 #TKSTL
+		 #TKTObj
+		 #TKTObjDRAW
+		 TKTopAlgo
+		 #TKTopTest
+		 #TKV3d
+		 TKVCAF
+		 #TKVRML
+		 TKXCAF
+		 #TKXDE
+		 #TKXDECascade
+		 #TKXDEDRAW
+		 #TKXDEIGES
+		 TKXDESTEP
+		 #TKXMesh
+		 #TKXml
+		 #TKXmlL
+		 #TKXmlTObj
+		 #TKXmlXCAF
+		 #TKXSBase
+		 #TKXSDRAW     
+		)
+set(ILIBS cxnd)
+			
+
+__add_common_library(CADCore)
+
