@@ -262,7 +262,8 @@ std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* t
         //}
         getNamedSolids(TopLoc_Location{}, "", id, shapeTool, topLevelShapes.Value(iLabel), namedSolids);
     }
-    tracer->progress(0.1f);
+    if (tracer)
+        tracer->progress(0.1f);
     std::vector<stl_file> stl;
     stl.resize(namedSolids.size());
     tbb::parallel_for(tbb::blocked_range<size_t>(0, namedSolids.size()), [&](const tbb::blocked_range<size_t> &range) {
@@ -299,7 +300,8 @@ std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* t
             Standard_Integer aNodeOffset    = 0;
             Standard_Integer aTriangleOffet = 0;
             for (TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE); anExpSF.More(); anExpSF.Next()) {
-                tracer->progress(0.3f);
+                if (tracer)
+                    tracer->progress(0.3f);
                 const TopoDS_Shape &aFace = anExpSF.Current();
                 TopLoc_Location     aLoc;
                 Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(TopoDS::Face(aFace), aLoc);
@@ -327,8 +329,9 @@ std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* t
                             interuptted = true;
                             break;
                         }
+                        tracer->progress(0.5f);
                     }
-                    tracer->progress(0.5f);
+
                     Poly_Triangle aTri = aTriangulation->Triangle(aTriIter);
 
                     aTri.Get(anId[0], anId[1], anId[2]);
