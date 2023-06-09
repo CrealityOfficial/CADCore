@@ -80,7 +80,7 @@ set(LIBS admesh
 		 #TKXSDRAW     
 		)
 set(ILIBS cxnd)
-			
+set(DEFS __TBB_NO_IMPLICIT_LINKAGE)
 
 __add_common_library(CADCore)
 

@@ -209,7 +209,7 @@ static void getNamedSolids(const TopLoc_Location& location, const std::string& p
     }
 }
 using Vec3f = Eigen::Matrix<float, 3, 1, Eigen::DontAlign>;
-std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* tracer)
+trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
 {
     bool cb_cancel = false;
     //if (stepFn) {
@@ -367,10 +367,9 @@ std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* t
         tracer->failed("Parse File Error.");
 
 
-    std::vector < trimesh::TriMesh*> trimeshs;
+    trimesh::TriMesh * tm = new  trimesh::TriMesh();
     for (int k = 0; k < stl.size(); k++)
     {
-        trimesh::TriMesh *tm = new trimesh::TriMesh();
         for (int i = 0; i < stl.at(k).facet_start.size(); i++)
         {
            
@@ -386,12 +385,10 @@ std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* t
             tm->faces.emplace_back(tf);
             tm->normals.emplace_back(trimesh::vec(n.x(), n.y(), n.z()));
         }
-        trimeshs.emplace_back(tm);
-       
+
     }
 
-
-    return trimeshs;
+    return tm;
 }
 
 }; // namespace Slic3r
