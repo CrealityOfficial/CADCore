@@ -3,6 +3,7 @@
 #include <functional>
 #include "trimesh2/TriMesh.h"
 #include "cadcore/interface.hpp"
+#include "qtusercore/module/progressortracer.h"
 
 namespace Slic3r {
 
@@ -20,7 +21,7 @@ typedef std::function<void(int load_stage, int current, int total, bool& cancel)
 typedef std::function<void(bool isUtf8)> StepIsUtf8Fn;
 
 //BBS: Load an step file into a provided model.
-CADCORE_API std::vector <trimesh::TriMesh*> load_step(const char *path);
+CADCORE_API std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* tracer);
 
 //BBS: Used to detect what kind of encoded type is used in name field of step
 // If is encoded in UTF8, the file don't need to be handled, then return the original path directly.

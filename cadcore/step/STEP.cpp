@@ -209,7 +209,7 @@ static void getNamedSolids(const TopLoc_Location& location, const std::string& p
     }
 }
 using Vec3f = Eigen::Matrix<float, 3, 1, Eigen::DontAlign>;
-std::vector <trimesh::TriMesh*> load_step(const char *path)
+std::vector <trimesh::TriMesh*> load_step(const char *path,  ccglobal::Tracer* tracer)
 {
     bool cb_cancel = false;
     //if (stepFn) {
@@ -237,6 +237,9 @@ std::vector <trimesh::TriMesh*> load_step(const char *path)
         throw std::logic_error{ std::string{"Could not read '"} + path + "'" };
         
     }
+    bool interuptted = false;
+
+
     Handle(XCAFDoc_ShapeTool) shapeTool = XCAFDoc_DocumentTool::ShapeTool(document->Main());
     TDF_LabelSequence topLevelShapes;
     shapeTool->GetFreeShapes(topLevelShapes);
@@ -259,11 +262,13 @@ std::vector <trimesh::TriMesh*> load_step(const char *path)
         //}
         getNamedSolids(TopLoc_Location{}, "", id, shapeTool, topLevelShapes.Value(iLabel), namedSolids);
     }
-
+    tracer->progress(0.1f);
     std::vector<stl_file> stl;
     stl.resize(namedSolids.size());
     tbb::parallel_for(tbb::blocked_range<size_t>(0, namedSolids.size()), [&](const tbb::blocked_range<size_t> &range) {
         for (size_t i = range.begin(); i < range.end(); i++) {
+            if (tracer)
+                tracer->formatMessage("range %d", (int)i);
             BRepMesh_IncrementalMesh mesh(namedSolids[i].solid, STEP_TRANS_CHORD_ERROR, false, STEP_TRANS_ANGLE_RES, true);
             // BBS: calculate total number of the nodes and triangles
             int aNbNodes     = 0;
@@ -294,6 +299,7 @@ std::vector <trimesh::TriMesh*> load_step(const char *path)
             Standard_Integer aNodeOffset    = 0;
             Standard_Integer aTriangleOffet = 0;
             for (TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE); anExpSF.More(); anExpSF.Next()) {
+                tracer->progress(0.3f);
                 const TopoDS_Shape &aFace = anExpSF.Current();
                 TopLoc_Location     aLoc;
                 Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(TopoDS::Face(aFace), aLoc);
@@ -312,6 +318,17 @@ std::vector <trimesh::TriMesh*> load_step(const char *path)
                 const TopAbs_Orientation anOrientation = anExpSF.Current().Orientation();
                 Standard_Integer anId[3];
                 for (Standard_Integer aTriIter = 1; aTriIter <= aTriangulation->NbTriangles(); ++aTriIter) {
+
+                    if (tracer)
+                    {
+                        tracer->progress((float)i / (float)aTriIter);
+                        if (tracer->interrupt())
+                        {
+                            interuptted = true;
+                            break;
+                        }
+                    }
+                    tracer->progress(0.5f);
                     Poly_Triangle aTri = aTriangulation->Triangle(aTriIter);
 
                     aTri.Get(anId[0], anId[1], anId[2]);
@@ -336,6 +353,16 @@ std::vector <trimesh::TriMesh*> load_step(const char *path)
             }
         }
     });
+
+    if (tracer && stl.size() > 0)
+    {
+
+        tracer->progress(1.0f);
+        tracer->success();
+    }
+    if (tracer && stl.size() == 0)
+        tracer->failed("Parse File Error.");
+
 
     std::vector < trimesh::TriMesh*> trimeshs;
     for (int k = 0; k < stl.size(); k++)

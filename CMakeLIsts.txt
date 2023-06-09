@@ -12,6 +12,7 @@ set(SRCS cadcore/interface.hPP
 		 )
 		 
 set(LIBS admesh
+		 qtuser_core 
 		 eigen
 		 freetype	
 		 tbb
