@@ -3,7 +3,7 @@
 #include <functional>
 #include "trimesh2/TriMesh.h"
 #include "cadcore/interface.hpp"
-#include "qtusercore/module/progressortracer.h"
+#include "ccglobal/tracer.h"
 
 namespace Slic3r {
 
