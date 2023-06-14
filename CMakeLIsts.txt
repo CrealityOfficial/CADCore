@@ -1,4 +1,4 @@
-#__cc_find(opencascade)
+__cc_find(opencascade)
 __cc_find(tbb)
 __cc_find(freetype)
 __cc_find(admesh)
@@ -9,8 +9,7 @@ __cc_find(trimesh2)
 set(SRCS cadcore/interface.hPP
 		 cadcore/step/STEP.hpp
 		 cadcore/step/STEP.cpp
-		 )
-set(INCS ${CMAKE_SOURCE_DIR}/opencascade/inc)		 
+		 )		 
 
 set(LIBS admesh
 		 eigen
