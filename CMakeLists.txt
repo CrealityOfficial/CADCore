@@ -6,7 +6,7 @@ __cc_find(eigen)
 __cc_find(trimesh2)
 
 
-set(SRCS cadcore/interface.hPP
+set(SRCS cadcore/interface.hpp
 		 cadcore/step/STEP.hpp
 		 cadcore/step/STEP.cpp
 		 )		 
