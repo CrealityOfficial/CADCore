@@ -23,7 +23,11 @@
 #include "BRepMesh_FaceDiscret.hxx"
 #include "BRepMesh_DelabellaMeshAlgoFactory.hxx"
 #include "BRepMesh_IncrementalMesh.hxx"
-
+#include "IMeshData_Types.hxx"
+#include "IMeshData_Face.hxx"
+#include "IMeshData_Edge.hxx"
+#include "IMeshData_Wire.hxx"
+#include "BRepMesh_ShapeTool.hxx"
 
 const double STEP_TRANS_CHORD_ERROR = 0.0025;
 const double STEP_TRANS_ANGLE_RES = 0.5;
@@ -92,8 +96,55 @@ trimesh::TriMesh* create_cylinder(double radius, double height, int num_iter,  c
     aMesher.SetShape(boxShape);
     aMesher.ChangeParameters() = aMeshParams;
     aMesher.Perform(aContext);
+    Handle(IMeshData_Model)   theModel =  aContext.get()->GetModel();
 
 
+    Handle(NCollection_IncAllocator) aTmpAlloc(new NCollection_IncAllocator(IMeshData::MEMORY_BLOCK_SIZE_HUGE));
+    NCollection_Map<IMeshData_Face*> aUsedFaces(1, aTmpAlloc);
+    for (Standard_Integer aEdgeIt = 0; aEdgeIt < theModel->EdgesNb(); ++aEdgeIt)
+    {
+        const IMeshData::IEdgeHandle& aDEdge = theModel->GetEdge(aEdgeIt);
+        if (aDEdge->IsFree())
+        {
+            if (aDEdge->IsSet(IMeshData_Outdated))
+            {
+                TopLoc_Location aLoc;
+                BRep_Tool::Polygon3D(aDEdge->GetEdge(), aLoc);
+                //BRepMesh_ShapeTool::NullifyEdge(aDEdge->GetEdge(), aLoc);
+            }
+
+            continue;
+        }
+
+        for (Standard_Integer aPCurveIt = 0; aPCurveIt < aDEdge->PCurvesNb(); ++aPCurveIt)
+        {
+            // Find adjacent outdated face.
+            const IMeshData::IFaceHandle aDFace = aDEdge->GetPCurve(aPCurveIt)->GetFace();
+            if (!aUsedFaces.Contains(aDFace.get()))
+            {
+                aUsedFaces.Add(aDFace.get());
+                if (aDFace->IsSet(IMeshData_Outdated))
+                {
+                    TopLoc_Location aLoc;
+                    const Handle(Poly_Triangulation)& aTriangulation =
+                        BRep_Tool::Triangulation(aDFace->GetFace(), aLoc);
+
+                    // Clean all edges of oudated face.
+                    for (Standard_Integer aWireIt = 0; aWireIt < aDFace->WiresNb(); ++aWireIt)
+                    {
+                        const IMeshData::IWireHandle& aDWire = aDFace->GetWire(aWireIt);
+                        for (Standard_Integer aWireEdgeIt = 0; aWireEdgeIt < aDWire->EdgesNb(); ++aWireEdgeIt)
+                        {
+                            const IMeshData::IEdgeHandle aTmpDEdge = aDWire->GetEdge(aWireEdgeIt);
+                           // BRepMesh_ShapeTool::NullifyEdge(aTmpDEdge->GetEdge(), aTriangulation, aLoc);
+                        }
+                    }
+
+                   // BRepMesh_ShapeTool::NullifyFace(aDFace->GetFace());
+                }
+            }
+        }
+    }
 
     if (tracer && stl.facet_start.size() > 0)
     {
