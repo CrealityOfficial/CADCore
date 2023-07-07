@@ -9,6 +9,9 @@ __cc_find(trimesh2)
 set(SRCS cadcore/interface.hpp
 		 cadcore/step/STEP.hpp
 		 cadcore/step/STEP.cpp
+         cadcore/primitive/cylinder.hpp
+         cadcore/primitive/cylinder.cpp
+
 		 )		 
 
 set(LIBS admesh
@@ -46,7 +49,7 @@ set(LIBS admesh
 		 TKMesh
 		 #TKMeshVS
 		 #TKOffset
-		 #TKPrim
+		 TKPrim
 		 #TKQADraw
 		 #TKRWMesh
 		 #TKService
