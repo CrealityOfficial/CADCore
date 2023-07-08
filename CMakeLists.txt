@@ -5,14 +5,7 @@ __cc_find(admesh)
 __cc_find(eigen)
 __cc_find(trimesh2)
 
-
-set(SRCS cadcore/interface.hpp
-		 cadcore/step/STEP.hpp
-		 cadcore/step/STEP.cpp
-         cadcore/primitive/cylinder.hpp
-         cadcore/primitive/cylinder.cpp
-
-		 )		 
+__files_group(${CMAKE_CURRENT_SOURCE_DIR}/cadcore/ SRCS)	 
 
 set(LIBS admesh
 		 eigen
