@@ -1,16 +1,16 @@
 
-#include "cylinder.h"
+#include "cube.h"
 #include <assert.h>
-#include "BRepPrimAPI_MakeCylinder.hxx"
+#include "BRepPrimAPI_MakeBox.hxx"
 #include "cadcore/internal/util.h"
 
 
 namespace cadcore 
 {
     
-    trimesh::TriMesh* create_cylinder(double radius, double height, int num_iter)
+    trimesh::TriMesh* create_cube(double l, double w, int h)
     {
-        BRepPrimAPI_MakeCylinder maker(radius, height);
+        BRepPrimAPI_MakeBox maker(l, w, h);
         maker.Build();
 
         assert(maker.IsDone());
