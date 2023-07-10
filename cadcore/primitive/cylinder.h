@@ -3,12 +3,12 @@
 #include <functional>
 #include "trimesh2/TriMesh.h"
 #include "../interface.hpp"
-#include "ccglobal/tracer.h"
-
-namespace Slic3r {
 
 
-CADCORE_API trimesh::TriMesh * create_cylinder(double radius, double height, int num_iter,  ccglobal::Tracer* tracer);
+namespace cadcore {
+
+
+CADCORE_API trimesh::TriMesh * create_cylinder(double radius, double height, int num_iter);
 
 
 
