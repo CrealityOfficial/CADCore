@@ -10,7 +10,7 @@ namespace cadcore
 {
 	trimesh::TriMesh* createCone(double r1, double r2, double h)
 	{
-		BRepPrimAPI_MakeCone maker(r1, r2,h);
+		BRepPrimAPI_MakeCone maker(1, r2/r1,1);
 		maker.Build();
 
 		assert(maker.IsDone());
@@ -20,7 +20,7 @@ namespace cadcore
 
 		if (mesh)
 		{
-			trimesh::xform xf = trimesh::xform::scale((double)1);
+			trimesh::xform xf = trimesh::xform::scale(r1, r1, h);
 			trimesh::apply_xform(mesh, xf);
 		}
 
