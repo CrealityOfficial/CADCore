@@ -35,7 +35,7 @@ namespace cadcore
 
 
 		 GeomAPI_PointsToBSpline spline = GeomAPI_PointsToBSpline(array);
-		 Handle(Geom_Curve) curve = spline.Curve();
+		 Handle(Geom_BSplineCurve) curve = spline.Curve();
 		 BRepBuilderAPI_MakeEdge profile (curve);
 
 			/////# the linear path
