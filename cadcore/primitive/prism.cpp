@@ -26,37 +26,38 @@ namespace cadcore
 		//array.SetValue(3, gp_Pnt(2, 3, 0));
 		//array.SetValue(4, gp_Pnt(4, 3, 0));
 		//array.SetValue(5, gp_Pnt(5, 5, 0));
-		TColgp_Array1OfPnt array(1,4);
-		array.SetValue(1, gp_Pnt(0, 0, 0));
-		array.SetValue(2, gp_Pnt(1, 1, 0));
-		array.SetValue(3, gp_Pnt(2, 0, 0));
-		array.SetValue(4, gp_Pnt(0, 0, 0));
-
-
-
-		 GeomAPI_PointsToBSpline spline = GeomAPI_PointsToBSpline(array);
-		 Handle(Geom_BSplineCurve) curve = spline.Curve();
-		 BRepBuilderAPI_MakeEdge profile (curve);
-
-			/////# the linear path
-		gp_Pnt	starting_point (0.0, 0.0, 0.0);
-		gp_Pnt end_point (0.0, 0.0, 6.0);
-		gp_Vec vec  (starting_point, end_point);
-		BRepBuilderAPI_MakeEdge  path(starting_point, end_point);
-		path .Edge();
-
-			//# extrusion
-		BRepPrimAPI_MakePrism prism(profile, vec);
-		prism.Shape();
-
-
-		trimesh::TriMesh* mesh = Shape_Triangulation(prism, 0.1);
-		if (mesh)
-		{
-			trimesh::xform xf = trimesh::xform::scale((double)r);
-			trimesh::apply_xform(mesh, xf);
-		}
-
-		return mesh;
+		//TColgp_Array1OfPnt array(1,4);
+		//array.SetValue(1, gp_Pnt(0, 0, 0));
+		//array.SetValue(2, gp_Pnt(1, 1, 0));
+		//array.SetValue(3, gp_Pnt(2, 0, 0));
+		//array.SetValue(4, gp_Pnt(0, 0, 0));
+		//
+		//
+		//
+		// GeomAPI_PointsToBSpline spline = GeomAPI_PointsToBSpline(array);
+		// Handle(Geom_BSplineCurve) curve = spline.Curve();
+		// BRepBuilderAPI_MakeEdge profile (curve);
+		//
+		//	/////# the linear path
+		//gp_Pnt	starting_point (0.0, 0.0, 0.0);
+		//gp_Pnt end_point (0.0, 0.0, 6.0);
+		//gp_Vec vec  (starting_point, end_point);
+		//BRepBuilderAPI_MakeEdge  path(starting_point, end_point);
+		//path .Edge();
+		//
+		//	//# extrusion
+		//BRepPrimAPI_MakePrism prism(profile, vec);
+		//prism.Shape();
+		//
+		//
+		//trimesh::TriMesh* mesh = Shape_Triangulation(prism, 0.1);
+		//if (mesh)
+		//{
+		//	trimesh::xform xf = trimesh::xform::scale((double)r);
+		//	trimesh::apply_xform(mesh, xf);
+		//}
+		//
+		//return mesh;
+		return nullptr;
 	}
 }
