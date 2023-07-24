@@ -374,20 +374,24 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
         {
            
             stl_facet f =  stl.at(k).facet_start.at(i);
-            stl_normal n = f.normal;
-            trimesh::TriMesh::Face tf;  
             for (int j = 0; j < 3; j++)
             {
                 trimesh::point p(f.vertex[j].x(), f.vertex[j].y(), f.vertex[j].z());
                 tm->vertices.emplace_back(p);
-                tf.at(j) = (j + 3 * i);
             }
-            tm->faces.emplace_back(tf);
-            tm->normals.emplace_back(trimesh::vec(n.x(), n.y(), n.z()));
         }
 
     }
 
+    int fNum = (int)tm->vertices.size() / 3;
+    for (int i = 0; i < fNum; ++i)
+    {
+        trimesh::TriMesh::Face face;
+        face.x = 3 * i;
+        face.y = 3 * i + 1;
+        face.z = 3 * i + 2;
+        tm->faces.push_back(face);
+    }
     return tm;
 }
 
