@@ -2,7 +2,6 @@
 #include "STEP.hpp"
 #include "tbb/tbb.h"
 #include <string>
-#include "stl.h"
 #include <Eigen/Geometry>
 #include "trimesh2/TriMesh.h"
 #ifdef _WIN32
@@ -475,8 +474,10 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
     color_submodule.resize(namedSolids.size());
     if (tracer)
         tracer->progress(0.1f);
-    std::vector<stl_file> stl;
-    stl.resize(namedSolids.size());
+    trimesh::TriMesh* tm = new  trimesh::TriMesh();
+
+    //std::vector<stl_file> stl;
+    //stl.resize(namedSolids.size());
     tbb::parallel_for(tbb::blocked_range<size_t>(0, namedSolids.size()), [&](const tbb::blocked_range<size_t> &range) {
         for (size_t i = range.begin(); i < range.end(); i++) {
             if (tracer)
@@ -497,12 +498,6 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
             if (aNbTriangles == 0 || aNbNodes == 0)
                 // BBS: No triangulation on the shape.
                 continue;
-
-            stl[i].stats.type                = inmemory;
-            stl[i].stats.number_of_facets    = (uint32_t) aNbTriangles;
-            stl[i].stats.original_num_facets = stl[i].stats.number_of_facets;
-            stl_allocate(&stl[i]);
-
             std::vector<Vec3f> points;
             points.reserve(aNbNodes);
             // BBS: count faces missing triangulation
@@ -555,20 +550,15 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
                     aTri.Get(anId[0], anId[1], anId[2]);
                     if (anOrientation == TopAbs_REVERSED)
                         std::swap(anId[1], anId[2]);
-                    // BBS: save triangles facets
-                    stl_facet facet;
-                    facet.vertex[0] = points[anId[0] + aNodeOffset - 1].cast<float>();
-                    facet.vertex[1] = points[anId[1] + aNodeOffset - 1].cast<float>();
-                    facet.vertex[2] = points[anId[2] + aNodeOffset - 1].cast<float>();
-                    facet.extra[0]  = 0;
-                    facet.extra[1]  = 0;
-                    stl_normal normal;
-                    stl_calculate_normal(normal, &facet);
-                    stl_normalize_vector(normal);
-                    facet.normal                                      = normal;
-                    stl[i].facet_start[aTriangleOffet + aTriIter - 1] = facet;
+                    for (int j = 0; j < 3; j++)
+                    {
+                        trimesh::point p(points[anId[j] + aNodeOffset - 1].x(), points[anId[j] + aNodeOffset - 1].y()
+                            , points[anId[j] + aNodeOffset - 1].z());
+                        tm->vertices.emplace_back(p);
+                    }
+                    
+                    tm->grid.emplace_back(i);
                 }
-
                 aNodeOffset += aTriangulation->NbNodes();
                 aTriangleOffet += aTriangulation->NbTriangles();
                 anExpSF.Next();
@@ -576,32 +566,14 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
         }
     });
 
-    if (tracer && stl.size() > 0)
+    if (tracer && tm->vertices.size() > 0)
     {
 
         tracer->progress(1.0f);
         tracer->success();
     }
-    if (tracer && stl.size() == 0)
+    if (tracer && tm->vertices.size() == 0)
         tracer->failed("Parse File Error.");
-
-
-    trimesh::TriMesh* tm = new  trimesh::TriMesh();
-    for (int k = 0; k < stl.size(); k++)
-    {
-        for (int i = 0; i < stl.at(k).facet_start.size(); i++)
-        {
-            trimesh::Color c(color_submodule.at(k).r, color_submodule.at(k).g, color_submodule.at(k).b );
-            tm->colors.emplace_back(c);
-            stl_facet f = stl.at(k).facet_start.at(i);
-            for (int j = 0; j < 3; j++)
-            {
-                trimesh::point p(f.vertex[j].x(), f.vertex[j].y(), f.vertex[j].z());
-                tm->vertices.emplace_back(p);
-            }
-        }
-
-    }
 
     int fNum = (int)tm->vertices.size() / 3;
     for (int i = 0; i < fNum; ++i)
@@ -611,7 +583,10 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
         face.y = 3 * i + 1;
         face.z = 3 * i + 2;
         tm->faces.push_back(face);
+        trimesh::Color c(color_submodule.at(tm->grid.at(i)).r, color_submodule.at(tm->grid.at(i)).g, color_submodule.at(tm->grid.at(i)).b);
+        tm->colors.emplace_back(c);
     }
+    tm->grid.clear();
     return tm;
 
 }

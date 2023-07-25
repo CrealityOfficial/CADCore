@@ -1,15 +1,11 @@
 __cc_find(opencascade)
 __cc_find(tbb)
-__cc_find(freetype)
-__cc_find(admesh)
 __cc_find(eigen)
 __cc_find(trimesh2)
 
 __files_group(${CMAKE_CURRENT_SOURCE_DIR}/cadcore/ SRCS)	 
 
-set(LIBS admesh
-		 eigen
-		 freetype	
+set(LIBS eigen
 		 tbb
 		 trimesh2
 		 #TKBin
