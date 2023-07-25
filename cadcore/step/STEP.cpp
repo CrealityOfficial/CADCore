@@ -329,7 +329,7 @@ struct NamedSolid {
 
 static void getNamedSolids(const TopLoc_Location& location, const std::string& prefix,
                            unsigned int& id, const Handle(XCAFDoc_ShapeTool) shapeTool,
-                           const TDF_Label label, std::vector<NamedSolid>& namedSolids, std::vector<TopLoc_Location>&namedLables) {
+                           const TDF_Label label, std::vector<NamedSolid>& namedSolids) {
     TDF_Label referredLabel{label};
     if (shapeTool->IsReference(label))
         shapeTool->GetReferredShape(label, referredLabel);
@@ -347,10 +347,9 @@ static void getNamedSolids(const TopLoc_Location& location, const std::string& p
     TDF_LabelSequence components;
     if (shapeTool->GetComponents(referredLabel, components)) {
         for (Standard_Integer compIndex = 1; compIndex <= components.Length(); ++compIndex) {
-            getNamedSolids(localLocation, fullName, id, shapeTool, components.Value(compIndex), namedSolids, namedLables);
+            getNamedSolids(localLocation, fullName, id, shapeTool, components.Value(compIndex), namedSolids);
         }
     } else {
-        namedLables.push_back(localLocation);
         TopoDS_Shape shape;
         shapeTool->GetShape(referredLabel, shape);
         TopAbs_ShapeEnum shape_type = shape.ShapeType();
@@ -453,13 +452,9 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
 
         if (name == "")
             name = std::to_string(id++);
-        std::string fullName{ name };
+        
         colors.emplace (name, color);
     }
-
-
-
-
 
     for (Standard_Integer iLabel = 1; iLabel < topShapeLength; ++iLabel) {
         //if (stepFn) {
@@ -473,7 +468,7 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
         //        return false;
         //    }
         //}
-        getNamedSolids(TopLoc_Location{}, "", id, shapeTool, topLevelShapes.Value(iLabel), namedSolids, namedLables);
+        getNamedSolids(TopLoc_Location{}, "", id, shapeTool, topLevelShapes.Value(iLabel), namedSolids);
     }
 
     std::vector<Color> color_submodule;
@@ -515,8 +510,6 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
             // BBS: fill temporary triangulation
             Standard_Integer aNodeOffset    = 0;
             Standard_Integer aTriangleOffet = 0; 
-            namedSolids[i].name;
-            TopoDS_Shape x = namedSolids[i].solid;
             TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE);
 
         //    Standard_Integer trait =  namedLables.at(i).;
