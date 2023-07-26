@@ -369,6 +369,8 @@ static void getNamedSolids(const TopLoc_Location& location, const std::string& p
     }
 }
 using Vec3f = Eigen::Matrix<float, 3, 1, Eigen::DontAlign>;
+
+
 trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
 {
     bool cb_cancel = false;
@@ -404,7 +406,7 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
     Handle(XCAFDoc_ShapeTool) shapeTool = XCAFDoc_DocumentTool::ShapeTool(document->Main());
     TDF_LabelSequence topLevelShapes;
     shapeTool->GetFreeShapes(topLevelShapes);
-    int AXXX = topLevelShapes.Length();
+    //int AXXX = topLevelShapes.Length();
     unsigned int id{1};
     Standard_Integer topShapeLength = topLevelShapes.Length() + 1;
     auto stage_unit2 = topShapeLength / LOAD_STEP_STAGE_UNIT_NUM + 1;
@@ -422,8 +424,11 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
     TDF_LabelSequence tdfLabels;
     shapeTool->GetShapes(tdfLabels);   //获取装配体和组件对应名称
     int Roots = tdfLabels.Length();
-    Color color(0.8f, 0.8f, 0.8f);
-    std::map <std::string, Color> colors;
+    Color color0(0.8f, 0.8f, 0.8f);
+    Color color1(0.8f, 0.8f, 0.8f);
+    std::map <std::string, Color> shapesColors;
+    std::map<std::string, std::vector< Color>> faceColors;
+    bool is_shapeColor = false;
     //std::vector<Color> faceColors;
     for (int i = 1; i <= Roots; i++)
     {
@@ -431,15 +436,17 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
         bool colorcolor = rootColorTool->IsSet(label, XCAFDoc_ColorGen);
         bool colorcolor1 = rootColorTool->IsSet(label, XCAFDoc_ColorSurf);
         bool colorcolor2 = rootColorTool->IsSet(label, XCAFDoc_ColorCurv);
+        if (colorcolor || colorcolor2 || colorcolor2)
+            is_shapeColor = true;
         //Standard_Boolean GetColor(const TopoDS_Shape & S, const XCAFDoc_ColorType type, TDF_Label & colorL);
         Standard_Boolean xxsss5 = rootColorTool->GetColor(label, XCAFDoc_ColorGen, col);
         Standard_Boolean xxsss6 = rootColorTool->GetColor(label, XCAFDoc_ColorSurf, col);
         Standard_Boolean xxsss7 = rootColorTool->GetColor(label, XCAFDoc_ColorCurv, col);
-        color.r = (float)col.Red();
-        color.g = (float)col.Green();
-        color.b = (float)col.Blue();
-
-
+        color0.r = (float)col.Red();
+        color0.g = (float)col.Green();
+        color0.b = (float)col.Blue();
+        //TopoDS_Shape subshape =  shapeTool->GetShape(label);
+        //subshape.TShape();
         TDF_Label referredLabel{ label };
         if (shapeTool->IsReference(label))
             shapeTool->GetReferredShape(label, referredLabel);
@@ -452,7 +459,56 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
         if (name == "")
             name = std::to_string(id++);
         
-        colors.emplace (name, color);
+        shapesColors.emplace (name, color0);
+
+
+        TopoDS_Shape shape;
+        shapeTool->GetShape(referredLabel, shape);
+        TopTools_IndexedMapOfShape faces;
+        TopExp_Explorer xp(shape, TopAbs_FACE);
+        while (xp.More()) {
+            const TopoDS_Shape& af = xp.Current();
+            faces.Add(af);
+            xp.Next();
+        }
+
+        bool found_face_color = false;
+
+        //faceColors.resize(faces.Extent());
+        xp.Init(shape, TopAbs_FACE);
+        std::vector< Color> clos;
+        while (xp.More()) {
+
+            //Standard_Boolean xxsss50 = rootColorTool->GetColor(xp.Current(), XCAFDoc_ColorGen, col);
+            //Standard_Boolean xxsss60 = rootColorTool->GetColor(xp.Current(), XCAFDoc_ColorSurf, col);
+            //Standard_Boolean xxsss70 = rootColorTool->GetColor(xp.Current(), XCAFDoc_ColorCurv, col);
+            if (
+                rootColorTool->GetColor(xp.Current(), XCAFDoc_ColorGen, col) ||
+                rootColorTool->GetColor(xp.Current(), XCAFDoc_ColorSurf, col) ||
+                rootColorTool->GetColor(xp.Current(), XCAFDoc_ColorCurv, col)) {
+                is_shapeColor = false;
+                int index = faces.FindIndex(xp.Current());
+                color1.r = (float)col.Red();
+                color1.g = (float)col.Green();
+                color1.b = (float)col.Blue();
+                clos.emplace_back(color1);
+                found_face_color = true;
+            }
+            xp.Next();
+        }
+
+        if (clos.size() < faces.Extent())
+        {
+            while (clos.size() < faces.Extent())
+            {
+                clos.emplace_back(color0);
+            }
+        }
+
+
+
+        faceColors.emplace(name, clos);
+        clos.clear();
     }
 
     for (Standard_Integer iLabel = 1; iLabel < topShapeLength; ++iLabel) {
@@ -488,7 +544,8 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
             int aNbTriangles = 0;
             for (TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE); anExpSF.More(); anExpSF.Next()) {
                 TopLoc_Location aLoc;
-                Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(TopoDS::Face(anExpSF.Current()), aLoc);
+                TopoDS_Face face = TopoDS::Face(anExpSF.Current());
+                Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(face, aLoc);
                 if (!aTriangulation.IsNull()) {
                     aNbNodes += aTriangulation->NbNodes();
                     aNbTriangles += aTriangulation->NbTriangles();
@@ -505,17 +562,18 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
             // BBS: fill temporary triangulation
             Standard_Integer aNodeOffset    = 0;
             Standard_Integer aTriangleOffet = 0; 
-            TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE);
 
-        //    Standard_Integer trait =  namedLables.at(i).;
-            Color clclclc = colors.at(namedSolids[i].name);
-            color_submodule.at(i) = clclclc;
+            TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE);
+            
+            std::vector< Color> fcs = faceColors.at(namedSolids[i].name);
+            int  face_index = 0;
             while (anExpSF.More())
             {
                 if (tracer)
                     tracer->progress(0.3f);
-   
+
                 const TopoDS_Shape& aFace = anExpSF.Current();
+
                 TopLoc_Location     aLoc;
                 Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(TopoDS::Face(aFace), aLoc);
                 if (aTriangulation.IsNull()) {
@@ -555,13 +613,18 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
                         trimesh::point p(points[anId[j] + aNodeOffset - 1].x(), points[anId[j] + aNodeOffset - 1].y()
                             , points[anId[j] + aNodeOffset - 1].z());
                         tm->vertices.emplace_back(p);
+
                     }
-                    
-                    tm->grid.emplace_back(i);
+                    trimesh::Color c;
+                    if (is_shapeColor)  c = { shapesColors.at(namedSolids[i].name).r, shapesColors.at(namedSolids[i].name).g, shapesColors.at(namedSolids[i].name).b };
+                    else              c = {fcs.at(face_index).r, fcs.at(face_index).g, fcs.at(face_index).b };
+                    tm->colors.push_back(c);
+                    //tm->grid.emplace_back(i);
                 }
                 aNodeOffset += aTriangulation->NbNodes();
                 aTriangleOffet += aTriangulation->NbTriangles();
                 anExpSF.Next();
+                face_index++;
             }
         }
     });
@@ -583,10 +646,8 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
         face.y = 3 * i + 1;
         face.z = 3 * i + 2;
         tm->faces.push_back(face);
-        trimesh::Color c(color_submodule.at(tm->grid.at(i)).r, color_submodule.at(tm->grid.at(i)).g, color_submodule.at(tm->grid.at(i)).b);
-        tm->colors.emplace_back(c);
     }
-    tm->grid.clear();
+
     return tm;
 
 }
