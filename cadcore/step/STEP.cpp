@@ -534,100 +534,101 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
 
     //std::vector<stl_file> stl;
     //stl.resize(namedSolids.size());
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, namedSolids.size()), [&](const tbb::blocked_range<size_t> &range) {
-        for (size_t i = range.begin(); i < range.end(); i++) {
-            if (tracer)
-                tracer->formatMessage("range %d", (int)i);
-            BRepMesh_IncrementalMesh mesh(namedSolids[i].solid, STEP_TRANS_CHORD_ERROR, false, STEP_TRANS_ANGLE_RES, true);
-            // BBS: calculate total number of the nodes and triangles
-            int aNbNodes     = 0;
-            int aNbTriangles = 0;
-            for (TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE); anExpSF.More(); anExpSF.Next()) {
-                TopLoc_Location aLoc;
-                TopoDS_Face face = TopoDS::Face(anExpSF.Current());
-                Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(face, aLoc);
-                if (!aTriangulation.IsNull()) {
-                    aNbNodes += aTriangulation->NbNodes();
-                    aNbTriangles += aTriangulation->NbTriangles();
-                }
-            }
-
-            if (aNbTriangles == 0 || aNbNodes == 0)
-                // BBS: No triangulation on the shape.
-                continue;
-            std::vector<Vec3f> points;
-            points.reserve(aNbNodes);
-            // BBS: count faces missing triangulation
-            Standard_Integer aNbFacesNoTri = 0;
-            // BBS: fill temporary triangulation
-            Standard_Integer aNodeOffset    = 0;
-            Standard_Integer aTriangleOffet = 0; 
-
-            TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE);
-            
-            std::vector< Color> fcs = faceColors.at(namedSolids[i].name);
-            int  face_index = 0;
-            while (anExpSF.More())
-            {
-                if (tracer)
-                    tracer->progress(0.3f);
-
-                const TopoDS_Shape& aFace = anExpSF.Current();
-
-                TopLoc_Location     aLoc;
-                Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(TopoDS::Face(aFace), aLoc);
-                if (aTriangulation.IsNull()) {
-                    ++aNbFacesNoTri;
-                    continue;
-                }
-                // BBS: copy nodes
-                gp_Trsf aTrsf = aLoc.Transformation();
-                for (Standard_Integer aNodeIter = 1; aNodeIter <= aTriangulation->NbNodes(); ++aNodeIter) {
-                    gp_Pnt aPnt = aTriangulation->Node(aNodeIter);
-                    aPnt.Transform(aTrsf);
-                    points.emplace_back(std::move(Vec3f(aPnt.X(), aPnt.Y(), aPnt.Z())));
-                }
-                // BBS: copy triangles
-                const TopAbs_Orientation anOrientation = anExpSF.Current().Orientation();
-                Standard_Integer anId[3];
-                for (Standard_Integer aTriIter = 1; aTriIter <= aTriangulation->NbTriangles(); ++aTriIter) {
-
-                    if (tracer)
-                    {
-                        tracer->progress((float)i / (float)aTriIter);
-                        if (tracer->interrupt())
-                        {
-                            interuptted = true;
-                            break;
-                        }
-                        tracer->progress(0.5f);
-                    }
-
-                    Poly_Triangle aTri = aTriangulation->Triangle(aTriIter);
-
-                    aTri.Get(anId[0], anId[1], anId[2]);
-                    if (anOrientation == TopAbs_REVERSED)
-                        std::swap(anId[1], anId[2]);
-                    for (int j = 0; j < 3; j++)
-                    {
-                        trimesh::point p(points[anId[j] + aNodeOffset - 1].x(), points[anId[j] + aNodeOffset - 1].y()
-                            , points[anId[j] + aNodeOffset - 1].z());
-                        tm->vertices.emplace_back(p);
-
-                    }
-                    trimesh::Color c;
-                    if (is_shapeColor)  c = { shapesColors.at(namedSolids[i].name).r, shapesColors.at(namedSolids[i].name).g, shapesColors.at(namedSolids[i].name).b };
-                    else              c = {fcs.at(face_index).r, fcs.at(face_index).g, fcs.at(face_index).b };
-                    tm->colors.push_back(c);
-                    //tm->grid.emplace_back(i);
-                }
-                aNodeOffset += aTriangulation->NbNodes();
-                aTriangleOffet += aTriangulation->NbTriangles();
-                anExpSF.Next();
-                face_index++;
+    //tbb::parallel_for(tbb::blocked_range<size_t>(0, namedSolids.size()), [&](const tbb::blocked_range<size_t> &range) {
+    for (size_t i = 0; i < namedSolids.size(); i++) {
+        if (tracer)
+            tracer->formatMessage("range %d", (int)i);
+        BRepMesh_IncrementalMesh mesh(namedSolids[i].solid, STEP_TRANS_CHORD_ERROR, false, STEP_TRANS_ANGLE_RES, true);
+        // BBS: calculate total number of the nodes and triangles
+        int aNbNodes     = 0;
+        int aNbTriangles = 0;
+        for (TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE); anExpSF.More(); anExpSF.Next()) {
+            TopLoc_Location aLoc;
+            TopoDS_Face face = TopoDS::Face(anExpSF.Current());
+            Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(face, aLoc);
+            if (!aTriangulation.IsNull()) {
+                aNbNodes += aTriangulation->NbNodes();
+                aNbTriangles += aTriangulation->NbTriangles();
             }
         }
-    });
+
+        if (aNbTriangles == 0 || aNbNodes == 0)
+            // BBS: No triangulation on the shape.
+            continue;
+        std::vector<Vec3f> points;
+        points.reserve(aNbNodes);
+        // BBS: count faces missing triangulation
+        Standard_Integer aNbFacesNoTri = 0;
+        // BBS: fill temporary triangulation
+        Standard_Integer aNodeOffset    = 0;
+        Standard_Integer aTriangleOffet = 0; 
+
+        TopExp_Explorer anExpSF(namedSolids[i].solid, TopAbs_FACE);
+            
+        std::vector< Color> fcs = faceColors.at(namedSolids[i].name);
+        int  face_index = 0;
+        while (anExpSF.More())
+        {
+            if (tracer)
+                tracer->progress(0.3f);
+
+            const TopoDS_Shape& aFace = anExpSF.Current();
+
+            TopLoc_Location     aLoc;
+            Handle(Poly_Triangulation) aTriangulation = BRep_Tool::Triangulation(TopoDS::Face(aFace), aLoc);
+            if (aTriangulation.IsNull()) {
+                ++aNbFacesNoTri;
+                continue;
+            }
+            // BBS: copy nodes
+            gp_Trsf aTrsf = aLoc.Transformation();
+            for (Standard_Integer aNodeIter = 1; aNodeIter <= aTriangulation->NbNodes(); ++aNodeIter) {
+                gp_Pnt aPnt = aTriangulation->Node(aNodeIter);
+                aPnt.Transform(aTrsf);
+                points.emplace_back(std::move(Vec3f(aPnt.X(), aPnt.Y(), aPnt.Z())));
+            }
+            // BBS: copy triangles
+            const TopAbs_Orientation anOrientation = anExpSF.Current().Orientation();
+            Standard_Integer anId[3];
+            for (Standard_Integer aTriIter = 1; aTriIter <= aTriangulation->NbTriangles(); ++aTriIter) {
+
+                if (tracer)
+                {
+                    tracer->progress((float)i / (float)aTriIter);
+                    if (tracer->interrupt())
+                    {
+                        interuptted = true;
+                        break;
+                    }
+                    tracer->progress(0.5f);
+                }
+
+                Poly_Triangle aTri = aTriangulation->Triangle(aTriIter);
+
+                aTri.Get(anId[0], anId[1], anId[2]);
+                if (anOrientation == TopAbs_REVERSED)
+                    std::swap(anId[1], anId[2]);
+
+                for (int j = 0; j < 3; j++)
+                {
+                    trimesh::point p(points[anId[j] + aNodeOffset - 1].x(), points[anId[j] + aNodeOffset - 1].y()
+                        , points[anId[j] + aNodeOffset - 1].z());
+                    tm->vertices.emplace_back(p);
+
+                }
+                trimesh::Color c;
+                if (is_shapeColor)  c = { shapesColors.at(namedSolids[i].name).r, shapesColors.at(namedSolids[i].name).g, shapesColors.at(namedSolids[i].name).b };
+                else              c = {fcs.at(face_index).r, fcs.at(face_index).g, fcs.at(face_index).b };
+                tm->colors.push_back(c);
+
+            }
+            aNodeOffset += aTriangulation->NbNodes();
+            aTriangleOffet += aTriangulation->NbTriangles();
+            anExpSF.Next();
+            face_index++;
+        }
+    }
+   // });
 
     if (tracer && tm->vertices.size() > 0)
     {
