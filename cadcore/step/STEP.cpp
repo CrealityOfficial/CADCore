@@ -457,7 +457,7 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
             name = TCollection_AsciiString(shapeName->Get()).ToCString();
 
         if (name == "")
-            name = std::to_string(id++);
+            name = std::to_string(id);
         
         shapesColors.emplace (name, color0);
 
@@ -641,7 +641,7 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
                 }
                 trimesh::Color c;
                 if (is_shapeColor)  c = { shapesColors.at(namedSolids[i].name).r, shapesColors.at(namedSolids[i].name).g, shapesColors.at(namedSolids[i].name).b };
-                else              c = {fcs.at(face_index).r, fcs.at(face_index).g, fcs.at(face_index).b };
+                else if(fcs.size()>0)              c = {fcs.at(face_index).r, fcs.at(face_index).g, fcs.at(face_index).b };
                 tm->colors.push_back(c);
 
             }
