@@ -428,7 +428,7 @@ trimesh::TriMesh* load_step(const char *path,  ccglobal::Tracer* tracer)
     Color color1(0.8f, 0.8f, 0.8f);
     std::map <std::string, Color> shapesColors;
     std::map<std::string, std::vector< Color>> faceColors;
-    bool is_shapeColor = false;
+    bool is_shapeColor = false;  //目前分两种状态，体颜色（整个模型由许多子模型构成，每个子模型由许多颜色组成），面颜色（即一个体的面颜色不一样，这个由yi添加，后续可能需要调整）
     //std::vector<Color> faceColors;
     for (int i = 1; i <= Roots; i++)
     {
