@@ -1,13 +1,11 @@
 __cc_find(opencascade)
-__cc_find(tbb)
-__cc_find(eigen)
 __cc_find(trimesh2)
 
-__files_group(${CMAKE_CURRENT_SOURCE_DIR}/cadcore/ SRCS)	 
+__assert_target(trimesh2)
+__assert_target(TKernel)
 
-set(LIBS eigen
-		 tbb
-		 trimesh2
+__files_group(${CMAKE_CURRENT_SOURCE_DIR}/cadcore/ SRCS)	 
+set(LIBS trimesh2
 		 #TKBin
 		 #TKBinL
 		 #TKBinTObj
@@ -71,8 +69,6 @@ set(LIBS eigen
 		 #TKXSBase
 		 #TKXSDRAW     
 		)
-set(ILIBS cxnd)
-set(DEFS __TBB_NO_IMPLICIT_LINKAGE)
 
-__add_common_library(CADCore)
+__add_common_library(cadcore)
 
